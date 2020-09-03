@@ -1,13 +1,13 @@
-CC = /pitools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc
+CC = gcc
 LDFLAGS =
-BLDDIR = /build
+BLDDIR = .
 INCDIR = $(BLDDIR)/inc
 SRCDIR = $(BLDDIR)/src
-OBJDIR = $(BLDDIR)/bin
+OBJDIR = $(BLDDIR)/obj
 CFLAGS = -c -Wall -I$(INCDIR)
 SRC = $(wildcard $(SRCDIR)/*.c)
 OBJ = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC))
-EXE = $(OBJDIR)/bin
+EXE = bin/bin
 
 all: clean $(EXE) 
     
