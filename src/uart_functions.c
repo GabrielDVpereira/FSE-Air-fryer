@@ -37,8 +37,8 @@ void closeUart(int uartStream){
     close(uartStream);
 }
 
-void writeUart(int uartStream, unsigned char* info) {
-   int response = write(uartStream, info, sizeof(info));
+void writeUart(int uartStream, unsigned char* info, int size) {
+   int response = write(uartStream, info, size);
    if(response < 0){
     printf("Erro ao escrever na UART\n"); 
     return; 
@@ -49,7 +49,6 @@ void writeUart(int uartStream, unsigned char* info) {
 }
 
 
-unsigned char matricula[] = {0, 3, 4, 1}; 
 
 
 void printBuffer(unsigned char * buffer) {
@@ -59,26 +58,28 @@ void printBuffer(unsigned char * buffer) {
     printf("\n");
 }
 
+unsigned char matricula[] = {0, 3, 4, 1}; 
 void sendIntUart(int uartStream, int data){
-    unsigned char buffer[10];
+    unsigned char buffer[9];
     buffer[0] = SEND_INT;
-    memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
-    memcpy(&buffer[5],  matricula, sizeof(matricula)); // copying matricula
-    printf("Buffer para envio de inteiro criado! \n"); 
-    printBuffer(buffer);
-    writeUart(uartStream, buffer);
+
+    memcpy(&buffer[1], &data, 4);
+    memcpy(&buffer[5], matricula, 4);
+
+    writeUart(uartStream, buffer, 9);
 }
 
 
 void sendFloatUart(int uartStream, float data){
     unsigned char buffer[20];
     buffer[0] = SEND_FLOAT;
+
     memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
     memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
    
    printf("Buffer para envio de float criado! \n"); 
    printBuffer(buffer);
-   writeUart(uartStream, buffer);
+   writeUart(uartStream, buffer, 9);
 }
 
 void sendStringUart(int uartStream, char* data){
@@ -91,15 +92,15 @@ void sendStringUart(int uartStream, char* data){
 
     printf("Buffer para envio de string criado! \n"); 
     printBuffer(buffer);
-    writeUart(uartStream, buffer);
+    writeUart(uartStream, buffer, data_size + 6);
 }
 
 void readInd(int uartStream){
-    unsigned char cmd_buffer[20];
+    unsigned char cmd_buffer[5];
     cmd_buffer[0] =  REQUEST_INT;
 
-    memcpy(&cmd_buffer[1], matricula, sizeof(matricula)); // copying matricula
-    writeUart(uartStream, cmd_buffer);
+    memcpy(&cmd_buffer[1], matricula, 4); 
+    writeUart(uartStream, cmd_buffer, 5);
 
     sleep(1);
 
@@ -118,6 +119,15 @@ void readInd(int uartStream){
 }
 
 void readFloat(int uartStream){
+
+    unsigned char cmd_buffer[5];
+    cmd_buffer[0] =  REQUEST_FLOAT;
+
+    memcpy(&cmd_buffer[1], matricula, 4); 
+    writeUart(uartStream, cmd_buffer, 5);
+
+    sleep(1);
+
     float buffer; 
     int length = read(uartStream, (void*)&buffer, 4);
 

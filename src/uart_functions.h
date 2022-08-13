@@ -3,7 +3,7 @@
 
 int initUart(char *);
 void configUart(int); 
-void writeUart(int, unsigned char*); 
+void writeUart(int, unsigned char*, int); 
 void closeUart(int); 
 
 void sendIntUart(int, int); 
