@@ -1,9 +1,10 @@
 #include "uart_functions.h"
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>         //Used for UART
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
-#include "config.c"
+#include <string.h>
 
 int initUart(char * path) {
     int uart0_filestream = -1;
@@ -36,7 +37,7 @@ void closeUart(int uartStream){
     close(uartStream);
 }
 
-void writeUart(int uartStream, char* info) {
+void writeUart(int uartStream, unsigned char* info) {
    int response = write(uartStream, info, sizeof(info));
    if(response < 0){
     printf("Erro ao escrever na UART\n"); 
@@ -48,52 +49,71 @@ void writeUart(int uartStream, char* info) {
 }
 
 
-char matricula = {0, 3, 4, 1}; 
+unsigned char matricula[] = {0, 3, 4, 1}; 
+
+
+void printBuffer(unsigned char * buffer) {
+    for(int i=0; i < 9; i++){
+    printf("%x", buffer[i]);
+    }
+    printf("\n");
+}
 
 void sendIntUart(int uartStream, int data){
-    unsigned char buffer[20];
-    memcpy(buffer, &SEND_INT, 1); // copying code 
+    unsigned char buffer[10];
+    buffer[0] = SEND_INT;
     memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
-    memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
-   
-   printf("Buffer para envio de inteiro criado! \n"); 
-
-   writeUart(uartStream, buffer);
+    memcpy(&buffer[5],  matricula, sizeof(matricula)); // copying matricula
+    printf("Buffer para envio de inteiro criado! \n"); 
+    printBuffer(buffer);
+    writeUart(uartStream, buffer);
 }
 
 
 void sendFloatUart(int uartStream, float data){
     unsigned char buffer[20];
-    memcpy(buffer, &SEND_FLOAT, 1); // copying code 
+    buffer[0] = SEND_FLOAT;
     memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
     memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
    
-   printf("Buffer para envio de inteiro criado! \n"); 
-
+   printf("Buffer para envio de float criado! \n"); 
+   printBuffer(buffer);
    writeUart(uartStream, buffer);
 }
 
-void sendSringUart(int uartStream, char* data){
+void sendStringUart(int uartStream, char* data){
     unsigned char buffer[255];
     int data_size = strlen(data);
-
-    memcpy(buffer, &SEND_STRING, 1); // copying code 
-    memcpy(&buffer[1], &data_size, 1); // copying string size
+    buffer[0] = SEND_STRING;
+    buffer[1] = data_size; 
     memcpy(&buffer[2], data, data_size); // copying data 
     memcpy(&buffer[2 + data_size], matricula, sizeof(matricula)); // copying matricula 
+
+    printf("Buffer para envio de string criado! \n"); 
+    printBuffer(buffer);
     writeUart(uartStream, buffer);
 }
 
 void readInd(int uartStream){
-    unsigned int buffer; 
-    int length = read(uartStream, (void*)&buffer, 4);
+    unsigned char cmd_buffer[20];
+    cmd_buffer[0] =  REQUEST_INT;
 
+    memcpy(&cmd_buffer[1], matricula, sizeof(matricula)); // copying matricula
+    writeUart(uartStream, cmd_buffer);
+
+    sleep(1);
+
+    unsigned char buffer[20]; 
+    int data; 
+    int length = read(uartStream, (void*)buffer, 4);
+    memcpy(&data, &buffer, 4); // copying code 
+     
     if(length < 0){
         printf("Erro na leitura\n"); 
         return;
     }
 
-    printf("%i Bytes lidos : %d\n", length, buffer);
+    printf("%i Bytes lidos : %d\n", length, data);
 
 }
 
@@ -106,7 +126,7 @@ void readFloat(int uartStream){
         return;
     }
 
-    printf("%i Bytes lidos : %d\n", length, buffer);
+    printf("%i Bytes lidos : %f\n", length, buffer);
 }
 
 void readString(int uartStream){

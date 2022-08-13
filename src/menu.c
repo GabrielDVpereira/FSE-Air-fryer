@@ -1,13 +1,10 @@
+#include "menu.h"
 #include <stdio.h>
-#include "config.c"
 #include "uart_functions.h"
-
-void sendIntMenu(int);
-void sendFloatMenu(int);
-void sendStringMenu(int);
+#include "config.h"
 
 void menu(int uartStream){
-    int cmd[] = { SEND_INT,SEND_FLOAT, SEND_STRING,REQUEST_INT, REQUEST_FLOAT, REQUEST_STRING };
+    char cmd[] = { SEND_INT,SEND_FLOAT, SEND_STRING,REQUEST_INT, REQUEST_FLOAT, REQUEST_STRING };
     int option; 
     
     printf("Digite uma opção:\n");  
@@ -19,31 +16,13 @@ void menu(int uartStream){
     printf("5 - ler string\n");  
     
     while(scanf("%d", &option) == 1){
-        switch (cmd[option])
-        {
-        case SEND_INT:
-            sendIntMenu(uartStream); 
-            return; 
-        case SEND_FLOAT: 
-            sendFloatMenu(uartStream); 
-            return; 
-        case SEND_STRING: 
-            sendStringMenu(uartStream); 
-            return; 
-        case REQUEST_INT: 
-            readInd(uartStream); 
-            return; 
-        case REQUEST_FLOAT: 
-            readFloat(uartStream); 
-            return; 
-        case REQUEST_STRING: 
-            readString(uartStream); 
-            return; 
-        default:
-            break;
-        }
+        if(cmd[option] == SEND_INT) return sendIntMenu(uartStream); 
+        if(cmd[option] == SEND_FLOAT) return sendFloatMenu(uartStream); 
+        if(cmd[option] == SEND_STRING) return sendStringMenu(uartStream); 
+        if(cmd[option] == REQUEST_INT) return readInd(uartStream); 
+        if(cmd[option] == REQUEST_FLOAT) return readFloat(uartStream); 
+        if(cmd[option] == REQUEST_STRING) return readString(uartStream); 
     }
-
 }
 
 
@@ -61,9 +40,9 @@ void sendFloatMenu(int uartStream){
     sendFloatUart(uartStream, data); 
 }
 
-void sendStringMenu(uartStream){
+void sendStringMenu(int uartStream){
     char data[255]; 
-    printf("Digite a string que deseja enviar: "); 
-    fgets(data, sizeof(data), stdin); 
-    sendStringUart(uartStream, data); 
+    // printf("Digite a string que deseja enviar: "); 
+    // fgets(data, sizeof(data), stdin); 
+    sendStringUart(uartStream, "TESTE STRING"); 
 }
