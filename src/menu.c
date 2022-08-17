@@ -44,5 +44,5 @@ void sendStringMenu(int uartStream){
     char data[255]; 
     // printf("Digite a string que deseja enviar: "); 
     // fgets(data, sizeof(data), stdin); 
-    sendStringUart(uartStream, "TESTE STRING"); 
+    sendStringUart(uartStream, "TESTE"); 
 }
