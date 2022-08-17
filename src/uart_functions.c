@@ -5,6 +5,7 @@
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 #include <string.h>
+#include "crc16.h"
 
 int initUart(char * path) {
     int uart0_filestream = -1;
@@ -71,11 +72,11 @@ void sendIntUart(int uartStream, int data){
 
 
 void sendFloatUart(int uartStream, float data){
-    unsigned char buffer[20];
-    buffer[0] = SEND_FLOAT;
+   unsigned char buffer[20];
+   buffer[0] = SEND_FLOAT;
 
-    memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
-    memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
+   memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
+   memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
    
    printf("Buffer para envio de float criado! \n"); 
    printBuffer(buffer);
@@ -96,12 +97,16 @@ void sendStringUart(int uartStream, char* data){
 }
 
 void readInd(int uartStream){
-    unsigned char cmd_buffer[5];
-    cmd_buffer[0] =  REQUEST_INT;
+    int bufferSize = 5; 
+    unsigned char cmd_buffer[bufferSize];
+    cmd_buffer[0] =  DEVICE_ADDRESS;
+    cmd_buffer[1] =  REQUEST_DATA;
+    cmd_buffer[2] =  REQUEST_INT;
 
-    memcpy(&cmd_buffer[1], matricula, 4); 
-    writeUart(uartStream, cmd_buffer, 5);
-
+    short crc = calcula_CRC(cmd_buffer, 3);
+    memcpy(&cmd_buffer[3], &crc, sizeof(crc)); 
+    writeUart(uartStream, cmd_buffer, bufferSize);
+    printf("oi");
     sleep(1);
 
     unsigned char buffer[20]; 

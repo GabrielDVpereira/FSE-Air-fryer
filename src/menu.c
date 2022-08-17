@@ -4,6 +4,7 @@
 #include "config.h"
 
 void menu(int uartStream){
+     printf("menu");
     char cmd[] = { SEND_INT,SEND_FLOAT, SEND_STRING,REQUEST_INT, REQUEST_FLOAT, REQUEST_STRING };
     int option; 
     
