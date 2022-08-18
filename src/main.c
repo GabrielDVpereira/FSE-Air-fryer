@@ -14,9 +14,7 @@ int main(int argc, const char * argv[]) {
     }
 
     configUart(uart_stream);
-    printf("configUart");
     menu(uart_stream);
-    printf("After menu");
     closeUart(uart_stream);
 
   

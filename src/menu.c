@@ -4,7 +4,6 @@
 #include "config.h"
 
 void menu(int uartStream){
-     printf("menu");
     char cmd[] = { SEND_INT,SEND_FLOAT, SEND_STRING,REQUEST_INT, REQUEST_FLOAT, REQUEST_STRING };
     int option; 
     
@@ -42,8 +41,5 @@ void sendFloatMenu(int uartStream){
 }
 
 void sendStringMenu(int uartStream){
-    char data[255]; 
-    // printf("Digite a string que deseja enviar: "); 
-    // fgets(data, sizeof(data), stdin); 
-    sendStringUart(uartStream, "TESTE"); 
+    sendStringUart(uartStream, "GABS"); 
 }

@@ -77,16 +77,17 @@ void sendFloatUart(int uartStream, float data){
 void sendStringUart(int uartStream, char* data){
     int dataSize = strlen(data);
     int dataByteSize = dataSize + 1;
-    unsigned char dataByte[dataByteSize]; 
-
+    unsigned char* dataByte = (unsigned char*)malloc(dataByteSize); 
     dataByte[0] = dataSize;
     memcpy(&dataByte[1], data, dataSize);
-    MODBUS_MESSAGE message = getSendMessageModbus(SEND_STRING, data, dataByteSize);
+    MODBUS_MESSAGE message = getSendMessageModbus(SEND_STRING, dataByte, dataByteSize);
 
-    printf("%d\n", message.size);
     writeUart(uartStream, message.buffer, message.size );
+    free(dataByte);
+    free(message.buffer);
 }
 
+// TODO: VERIFICAR CRC 
 void readInd(int uartStream){
     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_INT);
     writeUart(uartStream, message.buffer, message.size);
@@ -94,10 +95,11 @@ void readInd(int uartStream){
 
     sleep(1);
 
-    unsigned char buffer[4]; 
+    unsigned char buffer[9]; 
     int data; 
-    int length = read(uartStream, buffer, 4);
-    memcpy(&data, buffer, 4); // copying code 
+    int length = read(uartStream, buffer, 9);
+    printBuffer(buffer);
+    memcpy(&data, &buffer[3], 4); // copying code 
      
     if(length < 0){
         printf("Erro na leitura\n"); 
@@ -108,6 +110,7 @@ void readInd(int uartStream){
 
 }
 
+// TODO: VERIFICAR CRC 
 void readFloat(int uartStream){
     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_FLOAT);
     writeUart(uartStream, message.buffer, message.size);
@@ -115,17 +118,21 @@ void readFloat(int uartStream){
 
     sleep(1);
 
-    float buffer; 
-    int length = read(uartStream, &buffer, 4);
+    unsigned char buffer[9]; 
+    float data; 
+    int length = read(uartStream, buffer, 9);
+    printBuffer(buffer);
+    memcpy(&data, &buffer[3], 4); // copying code 
 
     if(length < 0){
         printf("Erro na leitura\n"); 
         return;
     }
 
-    printf("%i Bytes lidos : %f\n", length, buffer);
+    printf("%i Bytes lidos : %f\n", length, data);
 }
 
+// TODO: VERIFICAR CRC 
 void readString(int uartStream){
 
     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_STRING);
@@ -134,31 +141,32 @@ void readString(int uartStream){
 
     sleep(1);
     
-    int message_len; 
-    int size = read(uartStream, &message_len, 1);
+    unsigned char buffer[255]; 
+    int size = read(uartStream, buffer, 255);
+    int messageSize = buffer[3];
 
     if(size < 0){
         printf("Erro na leitura\n"); 
         return;
     }
 
-    printf("Tamanho da String: %d\n", message_len); 
+    printf("Tamanho da String: %d\n", messageSize); 
 
-    unsigned char buffer[255];  
-    int message_total_size = read(uartStream, buffer, message_len);
-
-    if(message_total_size < 0){
+    char* str = (char*)malloc(messageSize);
+    memcpy(str, &buffer[4], messageSize); 
+    if(messageSize < 0){
         printf("Erro na leitura.\n"); 
         return;
     }
 
-    if(message_total_size == 0){
+    if(messageSize == 0){
         printf("Não há dados disponíveis.\n"); 
         return;
     }
 
-    buffer[message_total_size] = '\0';
-    printf("%i Bytes lidos : %s\n", message_total_size, buffer);
+    printf("%i Bytes lidos : %s\n", messageSize, str);
+
+    free(str);
 
 }
 

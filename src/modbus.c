@@ -7,16 +7,14 @@
 #include "config.h"
 #include "utils.h"
 
+unsigned char MATRICULA[] = {0, 3, 4, 1}; 
 MODBUS_MESSAGE getRequestMessageModbus(char subcode){
-    unsigned char MATRICULA[] = {0, 3, 4, 1}; 
     int bufferSize = 9; 
     int pos = 0; 
     unsigned char* cmd_buffer = (unsigned char*)malloc(bufferSize);
     cmd_buffer[pos++] =  DEVICE_ADDRESS;
     cmd_buffer[pos++] =  REQUEST_DATA;
     cmd_buffer[pos++] =  subcode;
-
-    printf("%d\n", pos); 
     
     memcpy(&cmd_buffer[pos], MATRICULA, sizeof(MATRICULA)); 
     pos += sizeof(MATRICULA);
@@ -33,7 +31,7 @@ MODBUS_MESSAGE getRequestMessageModbus(char subcode){
     return message; 
 }
 
-MODBUS_MESSAGE getSendBufferModbus(char subcode, unsigned char* data, int dataSize) {
+MODBUS_MESSAGE getSendMessageModbus(char subcode, unsigned char* data, int dataSize) {
     int pos = 0; 
     int headerSize = 3;
     int crcSize = 2; 
@@ -43,10 +41,9 @@ MODBUS_MESSAGE getSendBufferModbus(char subcode, unsigned char* data, int dataSi
     cmd_buffer[pos++] =  SEND_DATA;
     cmd_buffer[pos++] =  subcode;
 
-    memcpy(&cmd_buffer[pos], data, dataSize); 
-
+    memcpy(&cmd_buffer[pos], data, dataSize);
+    
     pos += dataSize;
-
     short crc = calcula_CRC(cmd_buffer, pos);
     memcpy(&cmd_buffer[pos], &crc, sizeof(crc)); 
     pos+=sizeof(crc);
