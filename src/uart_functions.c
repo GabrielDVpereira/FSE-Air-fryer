@@ -53,47 +53,44 @@ void writeUart(int uartStream, unsigned char* info, int size) {
 }
 
 
-unsigned char matricula[] = {0, 3, 4, 1}; 
 void sendIntUart(int uartStream, int data){
-    unsigned char buffer[9];
-    buffer[0] = SEND_INT;
 
-    memcpy(&buffer[1], &data, 4);
-    memcpy(&buffer[5], matricula, 4);
+    unsigned char dataByte[4]; 
+    memcpy(dataByte, &data, 4);
 
-    writeUart(uartStream, buffer, 9);
+    MODBUS_MESSAGE message = getSendMessageModbus(SEND_INT, dataByte, 4);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 }
 
 
 void sendFloatUart(int uartStream, float data){
-   unsigned char buffer[20];
-   buffer[0] = SEND_FLOAT;
 
-   memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
-   memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
-   
-   printf("Buffer para envio de float criado! \n"); 
-   printBuffer(buffer);
-   writeUart(uartStream, buffer, 9);
+   unsigned char dataByte[4]; 
+   memcpy(dataByte, &data, 4);
+
+   MODBUS_MESSAGE message = getSendMessageModbus(SEND_FLOAT, dataByte, 4);
+   writeUart(uartStream, message.buffer, message.size);
+   free(message.buffer);
 }
 
 void sendStringUart(int uartStream, char* data){
-    unsigned char buffer[256];
-    int data_size = strlen(data) + 1;
-    buffer[0] = SEND_STRING;
-    buffer[1] = data_size; 
-    memcpy(&buffer[2], data, data_size); // copying data 
-    memcpy(&buffer[2 + data_size], matricula, sizeof(matricula)); // copying matricula 
-    printf("numero da string: %d\n", data_size);
-    printf("Buffer para envio de string criado! \n"); 
-    printBuffer(buffer);
-    writeUart(uartStream, buffer, data_size + 6 ); // 1 of command, 1 of string size and 4 for matricula.
+    int dataSize = strlen(data);
+    int dataByteSize = dataSize + 1;
+    unsigned char dataByte[dataByteSize]; 
+
+    dataByte[0] = dataSize;
+    memcpy(&dataByte[1], data, dataSize);
+    MODBUS_MESSAGE message = getSendMessageModbus(SEND_STRING, data, dataByteSize);
+
+    printf("%d\n", message.size);
+    writeUart(uartStream, message.buffer, message.size );
 }
 
 void readInd(int uartStream){
-    MODBUS_REQUEST request = getRequestBufferModbus(REQUEST_INT);
-    writeUart(uartStream, request.buffer, request.size);
-    free(request.buffer);
+    MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_INT);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 
     sleep(1);
 
@@ -112,9 +109,9 @@ void readInd(int uartStream){
 }
 
 void readFloat(int uartStream){
-    MODBUS_REQUEST request = getRequestBufferModbus(REQUEST_FLOAT);
-    writeUart(uartStream, request.buffer, request.size);
-    free(request.buffer);
+    MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_FLOAT);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 
     sleep(1);
 
@@ -131,9 +128,9 @@ void readFloat(int uartStream){
 
 void readString(int uartStream){
 
-    MODBUS_REQUEST request = getRequestBufferModbus(REQUEST_STRING);
-    writeUart(uartStream, request.buffer, request.size);
-    free(request.buffer);
+    MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_STRING);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 
     sleep(1);
     

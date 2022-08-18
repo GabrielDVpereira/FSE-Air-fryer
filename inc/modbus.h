@@ -7,8 +7,9 @@ typedef struct
     unsigned char* buffer;
     int size;
 
-} MODBUS_REQUEST;
+} MODBUS_MESSAGE;
 
-MODBUS_REQUEST getRequestBufferModbus(char);
+MODBUS_MESSAGE getRequestMessageModbus(char);
+MODBUS_MESSAGE getSendMessageModbus(char subcode, unsigned char* data, int messageSize);
 
 #endif
