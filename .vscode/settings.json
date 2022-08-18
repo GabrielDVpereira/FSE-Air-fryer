@@ -14,6 +14,9 @@
         "vector": "c",
         "iterator": "c",
         "utility": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "config.h": "c",
+        "modbus.h": "c",
+        "utils.h": "c"
     }
 }

@@ -1,15 +1,18 @@
 #include "uart_functions.h"
 #include "config.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>         //Used for UART
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 #include <string.h>
-#include "crc16.h"
+#include "modbus.h"
+#include "utils.h"
+
 
 int initUart(char * path) {
     int uart0_filestream = -1;
-
+    
     uart0_filestream = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
 
     if (uart0_filestream == -1)
@@ -50,15 +53,6 @@ void writeUart(int uartStream, unsigned char* info, int size) {
 }
 
 
-
-
-void printBuffer(unsigned char * buffer) {
-    for(int i=0; i < 9; i++){
-    printf("%x", buffer[i]);
-    }
-    printf("\n");
-}
-
 unsigned char matricula[] = {0, 3, 4, 1}; 
 void sendIntUart(int uartStream, int data){
     unsigned char buffer[9];
@@ -97,22 +91,16 @@ void sendStringUart(int uartStream, char* data){
 }
 
 void readInd(int uartStream){
-    int bufferSize = 5; 
-    unsigned char cmd_buffer[bufferSize];
-    cmd_buffer[0] =  DEVICE_ADDRESS;
-    cmd_buffer[1] =  REQUEST_DATA;
-    cmd_buffer[2] =  REQUEST_INT;
+    MODBUS_REQUEST request = getRequestBufferModbus(REQUEST_INT);
+    writeUart(uartStream, request.buffer, request.size);
+    free(request.buffer);
 
-    short crc = calcula_CRC(cmd_buffer, 3);
-    memcpy(&cmd_buffer[3], &crc, sizeof(crc)); 
-    writeUart(uartStream, cmd_buffer, bufferSize);
-    printf("oi");
     sleep(1);
 
-    unsigned char buffer[20]; 
+    unsigned char buffer[4]; 
     int data; 
-    int length = read(uartStream, (void*)buffer, 4);
-    memcpy(&data, &buffer, 4); // copying code 
+    int length = read(uartStream, buffer, 4);
+    memcpy(&data, buffer, 4); // copying code 
      
     if(length < 0){
         printf("Erro na leitura\n"); 
@@ -124,17 +112,14 @@ void readInd(int uartStream){
 }
 
 void readFloat(int uartStream){
-
-    unsigned char cmd_buffer[5];
-    cmd_buffer[0] =  REQUEST_FLOAT;
-
-    memcpy(&cmd_buffer[1], matricula, 4); 
-    writeUart(uartStream, cmd_buffer, 5);
+    MODBUS_REQUEST request = getRequestBufferModbus(REQUEST_FLOAT);
+    writeUart(uartStream, request.buffer, request.size);
+    free(request.buffer);
 
     sleep(1);
 
     float buffer; 
-    int length = read(uartStream, (void*)&buffer, 4);
+    int length = read(uartStream, &buffer, 4);
 
     if(length < 0){
         printf("Erro na leitura\n"); 
@@ -146,12 +131,12 @@ void readFloat(int uartStream){
 
 void readString(int uartStream){
 
-    unsigned char cmd_buffer[5];
-    cmd_buffer[0] =  REQUEST_STRING;
+    MODBUS_REQUEST request = getRequestBufferModbus(REQUEST_STRING);
+    writeUart(uartStream, request.buffer, request.size);
+    free(request.buffer);
 
-    memcpy(&cmd_buffer[1], matricula, 4); 
-    writeUart(uartStream, cmd_buffer, 5);
     sleep(1);
+    
     int message_len; 
     int size = read(uartStream, &message_len, 1);
 
