@@ -22,7 +22,6 @@ MODBUS_MESSAGE getRequestMessageModbus(char subcode){
     short crc = calcula_CRC(cmd_buffer, pos);
     memcpy(&cmd_buffer[pos], &crc, sizeof(crc)); 
     pos+=sizeof(crc);
-    printBuffer(cmd_buffer);
 
     MODBUS_MESSAGE message; 
     message.buffer = cmd_buffer; 
@@ -47,7 +46,6 @@ MODBUS_MESSAGE getSendMessageModbus(char subcode, unsigned char* data, int dataS
     short crc = calcula_CRC(cmd_buffer, pos);
     memcpy(&cmd_buffer[pos], &crc, sizeof(crc)); 
     pos+=sizeof(crc);
-    printBuffer(cmd_buffer);
 
     MODBUS_MESSAGE message; 
     message.buffer = cmd_buffer; 
