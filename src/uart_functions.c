@@ -53,66 +53,66 @@ void writeUart(int uartStream, unsigned char* info, int size) {
 }
 
 
-void sendIntUart(int uartStream, int data){
+// void sendIntUart(int uartStream, int data){
 
-    unsigned char dataByte[4]; 
-    memcpy(dataByte, &data, 4);
+//     unsigned char dataByte[4]; 
+//     memcpy(dataByte, &data, 4);
 
-    MODBUS_MESSAGE message = getSendMessageModbus(SEND_INT, dataByte, 4);
-    writeUart(uartStream, message.buffer, message.size);
-    free(message.buffer);
-}
+//     MODBUS_MESSAGE message = getSendMessageModbus(SEND_INT, dataByte, 4);
+//     writeUart(uartStream, message.buffer, message.size);
+//     free(message.buffer);
+// }
 
 
-void sendFloatUart(int uartStream, float data){
+// void sendFloatUart(int uartStream, float data){
 
-   unsigned char dataByte[4]; 
-   memcpy(dataByte, &data, 4);
+//    unsigned char dataByte[4]; 
+//    memcpy(dataByte, &data, 4);
 
-   MODBUS_MESSAGE message = getSendMessageModbus(SEND_FLOAT, dataByte, 4);
-   writeUart(uartStream, message.buffer, message.size);
-   free(message.buffer);
-}
+//    MODBUS_MESSAGE message = getSendMessageModbus(SEND_FLOAT, dataByte, 4);
+//    writeUart(uartStream, message.buffer, message.size);
+//    free(message.buffer);
+// }
 
-void sendStringUart(int uartStream, char* data){
-    int dataSize = strlen(data);
-    int dataByteSize = dataSize + 1;
-    unsigned char* dataByte = (unsigned char*)malloc(dataByteSize); 
-    dataByte[0] = dataSize;
-    memcpy(&dataByte[1], data, dataSize);
-    MODBUS_MESSAGE message = getSendMessageModbus(SEND_STRING, dataByte, dataByteSize);
+// void sendStringUart(int uartStream, char* data){
+//     int dataSize = strlen(data);
+//     int dataByteSize = dataSize + 1;
+//     unsigned char* dataByte = (unsigned char*)malloc(dataByteSize); 
+//     dataByte[0] = dataSize;
+//     memcpy(&dataByte[1], data, dataSize);
+//     MODBUS_MESSAGE message = getSendMessageModbus(SEND_STRING, dataByte, dataByteSize);
 
-    writeUart(uartStream, message.buffer, message.size );
-    free(dataByte);
-    free(message.buffer);
-}
+//     writeUart(uartStream, message.buffer, message.size );
+//     free(dataByte);
+//     free(message.buffer);
+// }
 
 // TODO: VERIFICAR CRC 
-void readInd(int uartStream){
-    MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_INT);
-    writeUart(uartStream, message.buffer, message.size);
-    free(message.buffer);
+// void readInd(int uartStream){
+//     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_INT);
+//     writeUart(uartStream, message.buffer, message.size);
+//     free(message.buffer);
 
-    sleep(1);
+//     sleep(1);
 
-    unsigned char buffer[9]; 
-    int data; 
-    int length = read(uartStream, buffer, 9);
-    printBuffer(buffer);
-    memcpy(&data, &buffer[3], 4); // copying code 
+//     unsigned char buffer[9]; 
+//     int data; 
+//     int length = read(uartStream, buffer, 9);
+//     printBuffer(buffer);
+//     memcpy(&data, &buffer[3], 4); // copying code 
      
-    if(length < 0){
-        printf("Erro na leitura\n"); 
-        return;
-    }
+//     if(length < 0){
+//         printf("Erro na leitura\n"); 
+//         return;
+//     }
 
-    printf("%i Bytes lidos : %d\n", length, data);
+//     printf("%i Bytes lidos : %d\n", length, data);
 
-}
+// }
 
 // TODO: VERIFICAR CRC 
-void readFloat(int uartStream){
-    MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_FLOAT);
+float readTemperature(int uartStream, char tempType){
+    MODBUS_MESSAGE message = getRequestMessageModbus(tempType);
     writeUart(uartStream, message.buffer, message.size);
     free(message.buffer);
 
@@ -121,7 +121,6 @@ void readFloat(int uartStream){
     unsigned char buffer[9]; 
     float data; 
     int length = read(uartStream, buffer, 9);
-    printBuffer(buffer);
     memcpy(&data, &buffer[3], 4); // copying code 
 
     if(length < 0){
@@ -129,44 +128,44 @@ void readFloat(int uartStream){
         return;
     }
 
-    printf("%i Bytes lidos : %f\n", length, data);
+    return data;
 }
 
 // TODO: VERIFICAR CRC 
-void readString(int uartStream){
+// void readString(int uartStream){
 
-    MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_STRING);
-    writeUart(uartStream, message.buffer, message.size);
-    free(message.buffer);
+//     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_STRING);
+//     writeUart(uartStream, message.buffer, message.size);
+//     free(message.buffer);
 
-    sleep(1);
+//     sleep(1);
     
-    unsigned char buffer[255]; 
-    int size = read(uartStream, buffer, 255);
-    int messageSize = buffer[3];
+//     unsigned char buffer[255]; 
+//     int size = read(uartStream, buffer, 255);
+//     int messageSize = buffer[3];
 
-    if(size < 0){
-        printf("Erro na leitura\n"); 
-        return;
-    }
+//     if(size < 0){
+//         printf("Erro na leitura\n"); 
+//         return;
+//     }
 
-    printf("Tamanho da String: %d\n", messageSize); 
+//     printf("Tamanho da String: %d\n", messageSize); 
 
-    char* str = (char*)malloc(messageSize);
-    memcpy(str, &buffer[4], messageSize); 
-    if(messageSize < 0){
-        printf("Erro na leitura.\n"); 
-        return;
-    }
+//     char* str = (char*)malloc(messageSize);
+//     memcpy(str, &buffer[4], messageSize); 
+//     if(messageSize < 0){
+//         printf("Erro na leitura.\n"); 
+//         return;
+//     }
 
-    if(messageSize == 0){
-        printf("Não há dados disponíveis.\n"); 
-        return;
-    }
+//     if(messageSize == 0){
+//         printf("Não há dados disponíveis.\n"); 
+//         return;
+//     }
 
-    printf("%i Bytes lidos : %s\n", messageSize, str);
+//     printf("%i Bytes lidos : %s\n", messageSize, str);
 
-    free(str);
+//     free(str);
 
-}
+// }
 
