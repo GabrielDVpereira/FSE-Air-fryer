@@ -131,6 +131,7 @@
 #define BME280_CTRL_MEAS_ADDR                     UINT8_C(0xF4)
 #define BME280_CONFIG_ADDR                        UINT8_C(0xF5)
 #define BME280_DATA_ADDR                          UINT8_C(0xF7)
+#define BME280_SENSOR_PATH                        "/dev/i2c-1"
 
 /**\name API success code */
 #define BME280_OK                                 INT8_C(0)
