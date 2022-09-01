@@ -4,7 +4,7 @@
 #include "uart_functions.h"
 #include "string.h"
 #include "crc16.h"
-#include "config.h"
+#include "uart_config.h"
 #include "utils.h"
 
 unsigned char MATRICULA[] = {0, 3, 4, 1}; 
@@ -34,15 +34,20 @@ MODBUS_MESSAGE getSendMessageModbus(char subcode, unsigned char* data, int dataS
     int pos = 0; 
     int headerSize = 3;
     int crcSize = 2; 
+    int matricula_size = 4;
+    int total_size = headerSize + matricula_size + dataSize +  crcSize;
 
-    unsigned char* cmd_buffer = (unsigned char*)malloc(headerSize + dataSize +  crcSize);
+    unsigned char* cmd_buffer = (unsigned char*)malloc(total_size);
     cmd_buffer[pos++] =  DEVICE_ADDRESS;
     cmd_buffer[pos++] =  SEND_DATA;
     cmd_buffer[pos++] =  subcode;
 
+    memcpy(&cmd_buffer[pos], MATRICULA, sizeof(MATRICULA)); 
+    pos += sizeof(MATRICULA);
+
     memcpy(&cmd_buffer[pos], data, dataSize);
-    
     pos += dataSize;
+   
     short crc = calcula_CRC(cmd_buffer, pos);
     memcpy(&cmd_buffer[pos], &crc, sizeof(crc)); 
     pos+=sizeof(crc);
@@ -52,7 +57,6 @@ MODBUS_MESSAGE getSendMessageModbus(char subcode, unsigned char* data, int dataS
     message.size = pos; 
 
     return message;
-
 }
 
 
