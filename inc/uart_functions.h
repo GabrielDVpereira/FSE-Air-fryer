@@ -6,12 +6,10 @@ void configUart(int);
 void writeUart(int, unsigned char*, int); 
 void closeUart(int); 
 
-// void sendIntUart(int, int); 
-// void sendFloatUart(int, float); 
-// void sendStringUart(int, char*); 
+void sendIntUart(int, int, char);
+void sendByteUart(int, unsigned char, char);
 
-float readTemperature(int, char);
-void readReferenceTemperature(int);
-void readUserInputs(int);
+float readFloat(int, char);
+int readInt(int, char);
 
 #endif

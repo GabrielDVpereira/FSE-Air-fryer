@@ -1,5 +1,5 @@
 #include "uart_functions.h"
-#include "config.h"
+#include "uart_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>         //Used for UART
@@ -47,76 +47,31 @@ void writeUart(int uartStream, unsigned char* info, int size) {
     printf("Erro ao escrever na UART\n"); 
     return; 
    } 
-
-   printf("Mensagem Escrita! \n");
-
 }
 
 
-// void sendIntUart(int uartStream, int data){
+void sendIntUart(int uartStream, int data, char msgType){
+    unsigned char dataByte[4]; 
+    memcpy(dataByte, &data, 4);
 
-//     unsigned char dataByte[4]; 
-//     memcpy(dataByte, &data, 4);
+    MODBUS_MESSAGE message = getSendMessageModbus(msgType, dataByte, 4);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
+}
 
-//     MODBUS_MESSAGE message = getSendMessageModbus(SEND_INT, dataByte, 4);
-//     writeUart(uartStream, message.buffer, message.size);
-//     free(message.buffer);
-// }
-
-
-// void sendFloatUart(int uartStream, float data){
-
-//    unsigned char dataByte[4]; 
-//    memcpy(dataByte, &data, 4);
-
-//    MODBUS_MESSAGE message = getSendMessageModbus(SEND_FLOAT, dataByte, 4);
-//    writeUart(uartStream, message.buffer, message.size);
-//    free(message.buffer);
-// }
-
-// void sendStringUart(int uartStream, char* data){
-//     int dataSize = strlen(data);
-//     int dataByteSize = dataSize + 1;
-//     unsigned char* dataByte = (unsigned char*)malloc(dataByteSize); 
-//     dataByte[0] = dataSize;
-//     memcpy(&dataByte[1], data, dataSize);
-//     MODBUS_MESSAGE message = getSendMessageModbus(SEND_STRING, dataByte, dataByteSize);
-
-//     writeUart(uartStream, message.buffer, message.size );
-//     free(dataByte);
-//     free(message.buffer);
-// }
+void sendByteUart(int uartStream, unsigned char data, char msgType){
+    MODBUS_MESSAGE message = getSendMessageModbus(msgType, &data, 1);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
+}
 
 // TODO: VERIFICAR CRC 
-// void readInd(int uartStream){
-//     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_INT);
-//     writeUart(uartStream, message.buffer, message.size);
-//     free(message.buffer);
-
-//     sleep(1);
-
-//     unsigned char buffer[9]; 
-//     int data; 
-//     int length = read(uartStream, buffer, 9);
-//     printBuffer(buffer);
-//     memcpy(&data, &buffer[3], 4); // copying code 
-     
-//     if(length < 0){
-//         printf("Erro na leitura\n"); 
-//         return;
-//     }
-
-//     printf("%i Bytes lidos : %d\n", length, data);
-
-// }
-
-// TODO: VERIFICAR CRC 
-float readTemperature(int uartStream, char tempType){
-    MODBUS_MESSAGE message = getRequestMessageModbus(tempType);
+float readFloat(int uartStream, char msgType){
+    MODBUS_MESSAGE message = getRequestMessageModbus(msgType);
     writeUart(uartStream, message.buffer, message.size);
     free(message.buffer);
 
-    sleep(1);
+    usleep(500000); 
 
     unsigned char buffer[9]; 
     float data; 
@@ -132,40 +87,22 @@ float readTemperature(int uartStream, char tempType){
 }
 
 // TODO: VERIFICAR CRC 
-// void readString(int uartStream){
+int readInt(int uartStream, char msgType){
+    MODBUS_MESSAGE message = getRequestMessageModbus(msgType);
+    writeUart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 
-//     MODBUS_MESSAGE message = getRequestMessageModbus(REQUEST_STRING);
-//     writeUart(uartStream, message.buffer, message.size);
-//     free(message.buffer);
+    usleep(500000); 
 
-//     sleep(1);
-    
-//     unsigned char buffer[255]; 
-//     int size = read(uartStream, buffer, 255);
-//     int messageSize = buffer[3];
+    unsigned char buffer[9]; 
+    int data; 
+    int length = read(uartStream, buffer, 9);
+    memcpy(&data, &buffer[3], 4); // copying code 
 
-//     if(size < 0){
-//         printf("Erro na leitura\n"); 
-//         return;
-//     }
-
-//     printf("Tamanho da String: %d\n", messageSize); 
-
-//     char* str = (char*)malloc(messageSize);
-//     memcpy(str, &buffer[4], messageSize); 
-//     if(messageSize < 0){
-//         printf("Erro na leitura.\n"); 
-//         return;
-//     }
-
-//     if(messageSize == 0){
-//         printf("Não há dados disponíveis.\n"); 
-//         return;
-//     }
-
-//     printf("%i Bytes lidos : %s\n", messageSize, str);
-
-//     free(str);
-
-// }
+    if(length < 0){
+        printf("Erro na leitura\n"); 
+        return;
+    }
+    return data;
+}
 
