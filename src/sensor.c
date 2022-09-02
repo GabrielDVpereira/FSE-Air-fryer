@@ -73,14 +73,9 @@ void init_sensor(){
 }
 
 
-void read_room_temperature(){
-    int8_t rslt = BME280_OK;
-    rslt = stream_sensor_data_forced_mode(&dev);
-    if (rslt != BME280_OK)
-    {
-        fprintf(stderr, "Failed to stream sensor data (code %+d).\n", rslt);
-        exit(1);
-    }
+float read_room_temperature(){
+    struct bme280_data data = stream_sensor_data_forced_mode(&dev);
+    return data.temperature;
 }
 
 /*!
@@ -158,7 +153,7 @@ void print_sensor_data(struct bme280_data *comp_data)
 /*!
  * @brief This API reads the sensor temperature, pressure and humidity data in forced mode.
  */
-int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev)
+struct bme280_data stream_sensor_data_forced_mode(struct bme280_dev *dev)
 {
     /* Variable to define the result */
     int8_t rslt = BME280_OK;
@@ -185,8 +180,7 @@ int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev)
     if (rslt != BME280_OK)
     {
         fprintf(stderr, "Failed to set sensor settings (code %+d).", rslt);
-
-        return rslt;
+        exit(0);
     }
 
     printf("Temperature, Pressure, Humidity\n");
@@ -195,29 +189,23 @@ int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev)
      *  and the oversampling configuration. */
     req_delay = bme280_cal_meas_delay(&dev->settings);
 
-    /* Continuously stream sensor data */
-    while (1)
+    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
+    if (rslt != BME280_OK)
     {
-        /* Set the sensor to forced mode */
-        rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
-        if (rslt != BME280_OK)
-        {
-            fprintf(stderr, "Failed to set sensor mode (code %+d).", rslt);
-            break;
-        }
-
-        /* Wait for the measurement to complete and print data */
-        dev->delay_us(req_delay, dev->intf_ptr);
-        rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
-        if (rslt != BME280_OK)
-        {
-            fprintf(stderr, "Failed to get sensor data (code %+d).", rslt);
-            break;
-        }
-
-        print_sensor_data(&comp_data);
-        sleep(1);
+        fprintf(stderr, "Failed to set sensor mode (code %+d).", rslt);
+        exit(0);
     }
 
-    return rslt;
+    /* Wait for the measurement to complete and print data */
+    dev->delay_us(req_delay, dev->intf_ptr);
+    rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
+    if (rslt != BME280_OK)
+    {
+        fprintf(stderr, "Failed to get sensor data (code %+d).", rslt);
+        exit(0);
+    }
+
+    print_sensor_data(&comp_data);
+
+    return comp_data;
 }
