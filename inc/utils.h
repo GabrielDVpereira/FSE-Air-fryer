@@ -1,6 +1,6 @@
 #ifndef UTILS
 #define UTILS
 
-void printBuffer(unsigned char * buffer); 
+void print_buffer(unsigned char * buffer); 
 
 #endif
