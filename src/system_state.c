@@ -47,7 +47,11 @@ void set_system_state_on(){
 }
 
 void set_system_state_off(){
-    config.system_state = SYSTEM_OFF; 
+   config.time = 0;
+   config.system_state = SYSTEM_OFF; 
+   config.system_running = SYSTEM_STOPED; 
+   config.kill_all = SYSTEM_IDLE; 
+   config.kill_all = KILL_SYSTEM;
 }
 
 void set_system_running(){

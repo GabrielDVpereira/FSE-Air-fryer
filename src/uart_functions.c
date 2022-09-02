@@ -47,6 +47,7 @@ void close_uart(int uartStream){
 int write_uart(int uartStream, unsigned char* info, int size) {
    int response = write(uartStream, info, size);
    if(response < 0){
+    printf("UART ERROR \n"); 
     return UART_WRITE_ERROR; 
    } 
    return UART_WRITE_SUCCESS;
@@ -99,10 +100,10 @@ MODBUS_RESPONSE read_uart(int uartStream, char msgType){
     response = get_uart_response(buffer); 
 
     short crc = calcula_CRC(buffer, 7);
-    printf("CRC CALCULADO: %d CRC ENVIADO: %d\n", crc, response.crc); 
 
     if(crc != response.crc){
         printf("Erro de CRC\n"); 
+        printf("CRC CALCULADO: %d CRC ENVIADO: %d\n", crc, response.crc); 
         response.error = CRC_ERROR; 
         return response; 
     }

@@ -12,6 +12,7 @@
 #include "gpio.h"
 #include "pid.h"
 #include<signal.h>
+#include "system_controller.h"
 
 #define SIGINT  2   /* Interrupt the process */ 
 
@@ -29,7 +30,6 @@ void handle_sigint(int sig)
 int main(int argc, const char * argv[]) {
   signal(SIGINT, handle_sigint);
   init_system();
-
   menu();
   shut_down_system();
    return 0;
@@ -38,6 +38,7 @@ int main(int argc, const char * argv[]) {
 
 void shut_down_system(){
   SYSTEM_CONFIG config = get_current_config(); 
+  
   close_uart(config.uart_stream);
 }
 
@@ -49,5 +50,5 @@ void init_system(){
   init_system_state(uart_stream);
   lcd_init();
   init_sensor();
-  // initialize_gpio();
+  initialize_gpio();
 }

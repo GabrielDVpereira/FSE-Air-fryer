@@ -34,7 +34,7 @@ void show_temperatute_lcd(double ti, double tr, int time){
    lcdLoc(LINE2);
    typeln(" TIME:");
    typeInt(time);
-   typeln(" min ");
+   typeln(" seg ");
 
 }
 

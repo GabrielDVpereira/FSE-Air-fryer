@@ -25,7 +25,8 @@ void menu(){
     while (1)
     {   
         if(should_kill_sytem()) return; 
-
+        if(is_system_running()) continue;
+        
         MODBUS_RESPONSE response = read_uart(config.uart_stream, REQUEST_USER_INPUTS); 
         
         int user_input; 
@@ -34,7 +35,6 @@ void menu(){
         if(response.subcode != REQUEST_USER_INPUTS) continue; 
         if(response.error != CRC_SUCCESS) continue; 
 
-        printf("USER INPUT: %d\n", user_input);
         switch (user_input)
         {
             case USER_INPUT_TURN_ON_OVEN:
@@ -118,12 +118,18 @@ void handle_running(){
         printf("You must turn on the System\n"); 
         return;
     }
+
+    if(is_system_running()){
+        printf("System is Already Running\n"); 
+        return;
+    }
+
     set_system_running(); 
     SYSTEM_CONFIG config = get_current_config(); 
     send_byte_uart(config.uart_stream,  config.system_running,  SEND_SYSTEM_RUNNING);
 
-    // pthread_t controller_thread_id;
-    // pthread_create(&controller_thread_id, NULL, (void*)control_temperature, NULL);
+    pthread_t controller_thread_id;
+    pthread_create(&controller_thread_id, NULL, (void*)control_temperature, NULL);
 }
 
 void handle_stoped(){
