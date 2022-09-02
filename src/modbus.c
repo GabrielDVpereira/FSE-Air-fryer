@@ -7,8 +7,8 @@
 #include "uart_config.h"
 #include "utils.h"
 
-unsigned char MATRICULA[] = {0, 3, 4, 1}; 
-MODBUS_MESSAGE getRequestMessageModbus(char subcode){
+unsigned char MATRICULA[] = {9, 9, 9, 9}; 
+MODBUS_MESSAGE format_request_message(char subcode){
     int bufferSize = 9; 
     int pos = 0; 
     unsigned char* cmd_buffer = (unsigned char*)malloc(bufferSize);
@@ -30,7 +30,7 @@ MODBUS_MESSAGE getRequestMessageModbus(char subcode){
     return message; 
 }
 
-MODBUS_MESSAGE getSendMessageModbus(char subcode, unsigned char* data, int dataSize) {
+MODBUS_MESSAGE format_send_message(char subcode, unsigned char* data, int dataSize) {
     int pos = 0; 
     int headerSize = 3;
     int crcSize = 2; 

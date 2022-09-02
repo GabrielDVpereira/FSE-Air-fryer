@@ -9,37 +9,45 @@
 #include "sensor.h"
 #include "system_config.h"
 #include <pthread.h>
+#include "gpio.h"
+#include "pid.h"
+#include<signal.h>
+
+#define SIGINT  2   /* Interrupt the process */ 
 
 
 void  init_system(); 
 void shut_down_system(); 
 
+void handle_sigint(int sig)
+{
+  shut_down_system();
+  set_kill_system(); 
+}
+
+
 int main(int argc, const char * argv[]) {
-   init_system();
+  signal(SIGINT, handle_sigint);
+  init_system();
 
-    // pthread_t sensor_thread_id;
-    // pthread_create(&sensor_thread_id, NULL, (void*)read_room_temperature, NULL);
-
-    menu();
-    shut_down_system();
-  
+  menu();
+  shut_down_system();
    return 0;
 }
 
 
 void shut_down_system(){
   SYSTEM_CONFIG config = get_current_config(); 
-  closeUart(config.uart_stream);
+  close_uart(config.uart_stream);
 }
 
 void init_system(){
-   int uart_stream = initUart("/dev/serial0");
-    if(uart_stream == -1){
-        exit(0); 
-    }
-
-    configUart(uart_stream);
-    init_system_state(uart_stream);
-    lcd_init();
-    init_sensor();
+  int uart_stream = init_uart("/dev/serial0");
+  if(uart_stream == -1) exit(0); 
+  pid_configura_constantes(30.0, 0.2, 400.0);
+  config_uart(uart_stream);
+  init_system_state(uart_stream);
+  lcd_init();
+  init_sensor();
+  // initialize_gpio();
 }
