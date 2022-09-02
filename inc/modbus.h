@@ -12,6 +12,8 @@ typedef struct
 
 #define CRC_ERROR 0
 #define CRC_SUCCESS 1
+#define READ_ERROR 2
+
 typedef struct 
 {
     int error;

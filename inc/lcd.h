@@ -30,5 +30,6 @@ void typeln(const char *s);
 void typeChar(char val);
 
 void show_temperatute_lcd(double, double, int);
+void show_message_lcd(const char*);
 
 #endif

@@ -26,13 +26,13 @@ void menu(){
     {   
         if(should_kill_sytem()) return; 
 
-        MODBUS_RESPONSE response = read_int(config.uart_stream, REQUEST_USER_INPUTS); 
+        MODBUS_RESPONSE response = read_uart(config.uart_stream, REQUEST_USER_INPUTS); 
         
         int user_input; 
         memcpy(&user_input, response.data, 4);
 
         if(response.subcode != REQUEST_USER_INPUTS) continue; 
-        if(response.error == CRC_ERROR) continue; 
+        if(response.error != CRC_SUCCESS) continue; 
 
         printf("USER INPUT: %d\n", user_input);
         switch (user_input)

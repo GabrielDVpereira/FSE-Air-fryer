@@ -11,6 +11,8 @@
 #include "crc16.h"
 
 
+MODBUS_RESPONSE get_uart_response(unsigned char*); 
+
 int init_uart(char * path) {
     int uart0_filestream = -1;
     
@@ -42,12 +44,12 @@ void close_uart(int uartStream){
     close(uartStream);
 }
 
-void write_uart(int uartStream, unsigned char* info, int size) {
+int write_uart(int uartStream, unsigned char* info, int size) {
    int response = write(uartStream, info, size);
    if(response < 0){
-    printf("Erro ao escrever na UART\n"); 
-    return; 
+    return UART_WRITE_ERROR; 
    } 
+   return UART_WRITE_SUCCESS;
 }
 
 void send_int_uart(int uartStream, int data, char msgType){
@@ -75,45 +77,29 @@ void send_byte_uart(int uartStream, unsigned char data, char msgType){
     free(message.buffer);
 }
 
-// TODO: VERIFICAR CRC 
-float read_float(int uartStream, char msgType){
+
+MODBUS_RESPONSE read_uart(int uartStream, char msgType){
     MODBUS_MESSAGE message = format_request_message(msgType);
-    write_uart(uartStream, message.buffer, message.size);
+    MODBUS_RESPONSE response;
+
+    int writte_response = write_uart(uartStream, message.buffer, message.size);
     free(message.buffer);
 
-    usleep(500000); 
-
-    unsigned char buffer[9]; 
-    float data; 
-    int length = read(uartStream, buffer, 9);
-    memcpy(&data, &buffer[3], 4); // copying code 
-
-    if(length < 0){
-        printf("Erro na leitura read_float\n"); 
-        return;
+    if(writte_response == UART_WRITE_ERROR) {
+        response.error = UART_WRITE_ERROR; 
+        return response;
     }
-    return data;
-}
 
-// TODO: VERIFICAR CRC 
-MODBUS_RESPONSE read_int(int uartStream, char msgType){
-    MODBUS_MESSAGE message = format_request_message(msgType);
-    write_uart(uartStream, message.buffer, message.size);
-    free(message.buffer);
+    usleep(250000); 
 
-    usleep(500000); 
-
-    MODBUS_RESPONSE response; 
-    response.error = CRC_SUCCESS;
     unsigned char buffer[9]; 
   
     int length = read(uartStream, buffer, 9);
 
-    short crc = calcula_CRC(buffer, 7);
-    memcpy(&response.crc, &buffer[7], 2);
+    response = get_uart_response(buffer); 
 
-    printf("CRC %d\n", crc); 
-    printf("CRC ENVIADO %d\n", response.crc); 
+    short crc = calcula_CRC(buffer, 7);
+    printf("CRC CALCULADO: %d CRC ENVIADO: %d\n", crc, response.crc); 
 
     if(crc != response.crc){
         printf("Erro de CRC\n"); 
@@ -121,15 +107,24 @@ MODBUS_RESPONSE read_int(int uartStream, char msgType){
         return response; 
     }
 
-    memcpy(&response.device_address, &buffer[0], 1); // copying code 
-    memcpy(&response.modbus_code, &buffer[1], 1); // copying code 
-    memcpy(&response.subcode, &buffer[2], 1); // copying code 
-    memcpy(&response.data, &buffer[3], 4); // copying code 
-
     if(length < 0){
-        printf("Erro na leitura read_int\n"); 
-        return;
+        response.error = READ_ERROR; 
+        return response;
     }
+    usleep(250000); 
+
+    return response;
+}
+
+
+MODBUS_RESPONSE get_uart_response(unsigned char* buffer){
+    MODBUS_RESPONSE response; 
+    response.error = CRC_SUCCESS;
+    memcpy(&response.crc, &buffer[7], 2);
+    memcpy(&response.device_address, &buffer[0], 1); 
+    memcpy(&response.modbus_code, &buffer[1], 1); 
+    memcpy(&response.subcode, &buffer[2], 1); 
+    memcpy(&response.data, &buffer[3], 4); 
     return response;
 }
 

@@ -19,7 +19,6 @@ void pid_configura_constantes(double Kp_, double Ki_, double Kd_){
 }
 
 void pid_atualiza_referencia(float referencia_){
-    printf("pid_atualiza_referencia %lf", referencia_);
     referencia = (double) referencia_;
 }
 

@@ -38,6 +38,11 @@ void show_temperatute_lcd(double ti, double tr, int time){
 
 }
 
+void show_message_lcd(const char *s){
+  ClrLcd();
+  typeln(s);
+}
+
 // float to string
 void typeFloat(float myFloat)   {
   char buffer[20];

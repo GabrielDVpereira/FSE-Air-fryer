@@ -204,8 +204,5 @@ struct bme280_data stream_sensor_data_forced_mode(struct bme280_dev *dev)
         fprintf(stderr, "Failed to get sensor data (code %+d).", rslt);
         exit(0);
     }
-
-    print_sensor_data(&comp_data);
-
     return comp_data;
 }
