@@ -13,17 +13,18 @@
 #include "pid.h"
 #include<signal.h>
 #include "system_controller.h"
+#include "uart_config.h"
 
 #define SIGINT  2   /* Interrupt the process */ 
 
 
-void  init_system(); 
+void init_system(); 
 void shut_down_system(); 
+void update_board();
 
 void handle_sigint(int sig)
 {
   shut_down_system();
-  set_kill_system(); 
 }
 
 
@@ -37,8 +38,9 @@ int main(int argc, const char * argv[]) {
 
 
 void shut_down_system(){
+  set_kill_system(); 
   SYSTEM_CONFIG config = get_current_config(); 
-  
+  update_board();
   close_uart(config.uart_stream);
 }
 
@@ -51,4 +53,14 @@ void init_system(){
   lcd_init();
   init_sensor();
   initialize_gpio();
+  update_board();
+}
+
+void update_board(){
+  SYSTEM_CONFIG config = get_current_config(); 
+  send_byte_uart(config.uart_stream, config.system_state, SEND_SISTEM_STATE);
+  usleep(500000); 
+  send_byte_uart(config.uart_stream, config.system_running, SEND_SYSTEM_RUNNING);
+  usleep(500000); 
+  send_int_uart(config.uart_stream, config.time, SEND_SYSTEM_TIME);
 }

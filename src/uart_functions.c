@@ -47,7 +47,6 @@ void close_uart(int uartStream){
 int write_uart(int uartStream, unsigned char* info, int size) {
    int response = write(uartStream, info, size);
    if(response < 0){
-    printf("UART ERROR \n"); 
     return UART_WRITE_ERROR; 
    } 
    return UART_WRITE_SUCCESS;

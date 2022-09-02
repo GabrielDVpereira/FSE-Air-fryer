@@ -64,4 +64,6 @@ void set_system_stoped(){
 
 void set_kill_system(){
     config.kill_all = KILL_SYSTEM;
+    config.system_running = SYSTEM_STOPED;
+    config.system_state = SYSTEM_OFF; 
 }
