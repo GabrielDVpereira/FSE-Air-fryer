@@ -2,7 +2,7 @@
 
 **Aluno:** Gabriel Davi Silva Pereira
 
-**Matricula:** 16/0121612
+**Matricula:** 17/0010341
 
 Implementação do [trabalho 2 de FSE](https://gitlab.com/fse_fga/trabalhos-2022_1/trabalho-2-2022-1). O trabalho consiste na implementação de um sistema embarcado de uma Air Fryer, que deve fazer o controle de um resistor e uma ventoinha de acordo com os dados recebidos dos sensores de temperatura.
 
