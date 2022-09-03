@@ -132,6 +132,11 @@ void handle_running(){
         return;
     }
 
+    if(is_time_over()){
+        printf("Você precisa adicionar um tempo para inciar\n"); 
+        return;
+    }
+
     set_system_running(); 
     SYSTEM_CONFIG config = get_current_config(); 
     send_byte_uart(config.uart_stream,  config.system_running,  SEND_SYSTEM_RUNNING);
