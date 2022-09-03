@@ -97,7 +97,7 @@ void controll_system_temperature(){
 }
 
 int is_idle_temperature(){
-    int ERROR_MARGIN = 1; 
+    float ERROR_MARGIN = 0.5; 
     return ti >= (tr - ERROR_MARGIN) && ti <= (tr + ERROR_MARGIN); // error margin of 1
 }
 

@@ -184,7 +184,9 @@ void handle_menu_mode(){
     send_float_uart(config.uart_stream, selected_option.tr, SEND_REFERENCE_SIGN);
     send_int_uart(config.uart_stream, selected_option.time, SEND_SYSTEM_TIME);
     set_mode(selected_option); 
-    show_message_lcd("Iniciando..."); 
+    char msg[20] = "Modo: "; 
+    strcat(msg, selected_option.name); 
+    show_message_lcd(msg); 
     sleep(1);
     handle_running();
 
