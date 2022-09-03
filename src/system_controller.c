@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>         //Used for UART
 #include <pthread.h>
-
+#include "log.h"
 
 
 
@@ -24,16 +24,22 @@ void reset_controller_state();
 void update_tr();
 void update_ti();
 int is_idle_temperature();
+void update_room_temp();
+void update_temp(); 
+
 
 
 int started_timer = 0; 
 int is_adjusting_temperature = 1; 
 float tr; 
 float ti; 
+double pwm; 
+float room_temp; 
 
 void control_temperature(){ 
     printf(" INITIALIZE TEMPERATURE CONTROL %d\n", is_system_running());
-    while (is_system_running()){   
+    while (is_system_running()){  
+        update_temp(); 
         if(should_kill_sytem()){
             reset_controller_state(); 
             return;
@@ -41,7 +47,6 @@ void control_temperature(){
         if(!is_time_over()) controll_system_temperature();
         if(!is_adjusting_temperature && !started_timer) start_system_timer(); 
         if(is_time_over()) stop_system(); 
- 
     }
 }
 
@@ -60,6 +65,7 @@ void control_timer(){
         if(timer % 60  == 0){
             decrease_system_time(); 
         }
+        writte_csv_log(ti,room_temp,tr,(int)pwm);
         sleep(1); 
     }
     started_timer = 0; 
@@ -70,21 +76,18 @@ void controll_system_temperature(){
     printf("controll_system_temperature\n"); 
     printf("\n\n"); 
 
-    update_tr(); 
-    update_ti(); 
-
     pid_atualiza_referencia(tr);
-    double pid = pid_controle(ti); 
+    pwm = pid_controle(ti); 
 
-    printf("PID %lf \n", pid); 
-    adjust_tempeture(pid);
+    printf("PID %lf \n", pwm); 
+    adjust_tempeture(pwm);
 
     if(is_adjusting_temperature){
         show_temperatute_lcd_adjusting(ti, tr);
     } 
 
     SYSTEM_CONFIG config = get_current_config();
-    send_int_uart(config.uart_stream, (int)pid, SEND_CONTROL_SIGN);
+    send_int_uart(config.uart_stream, (int)pwm, SEND_CONTROL_SIGN);
     send_float_uart(config.uart_stream, tr, SEND_REFERENCE_SIGN);
 
     if(is_idle_temperature()){ 
@@ -96,6 +99,12 @@ void controll_system_temperature(){
 int is_idle_temperature(){
     int ERROR_MARGIN = 1; 
     return ti >= (tr - ERROR_MARGIN) && ti <= (tr + ERROR_MARGIN); // error margin of 1
+}
+
+void update_temp(){
+    update_tr(); 
+    update_ti(); 
+    update_room_temp(); 
 }
 
 
@@ -130,6 +139,10 @@ void update_ti(){
     printf(" TI %f\n", ti); 
 }
 
+void update_room_temp(){
+  room_temp = read_room_temperature();
+}
+
 void start_system_timer(){
     started_timer = 1; 
     pthread_t timer_t_id;
@@ -146,13 +159,12 @@ void stop_system(){
 
     memcpy(&ti, response_ti.data, 4);
 
-    float room_temp = read_room_temperature();
     printf(" TI %f  ---- ROOM TEMP %f\n", ti, room_temp); 
 
     if(ti > room_temp){
         show_temperatute_lcd_cooling(ti, room_temp); 
         adjust_tempeture(-100);  // TURN ON FAN 
-        send_float_uart(config.uart_stream, -100.0, SEND_CONTROL_SIGN);
+        send_float_uart(config.uart_stream, -100, SEND_CONTROL_SIGN);
         return; 
     } 
     reset_controller_state(); 

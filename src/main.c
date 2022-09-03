@@ -14,6 +14,8 @@
 #include<signal.h>
 #include "system_controller.h"
 #include "uart_config.h"
+#include "lcd.h"
+#include "log.h"
 
 #define SIGINT  2   /* Interrupt the process */ 
 
@@ -38,10 +40,15 @@ int main(int argc, const char * argv[]) {
 
 
 void shut_down_system(){
+  show_message_lcd("Desligando...");
+  sleep(1); 
+  show_message_lcd("");
   set_kill_system(); 
   SYSTEM_CONFIG config = get_current_config(); 
   update_board();
+  sleep(1); 
   close_uart(config.uart_stream);
+  close_csv_file();
 }
 
 void init_system(){
@@ -54,6 +61,7 @@ void init_system(){
   init_sensor();
   initialize_gpio();
   update_board();
+  init_csv_log();
 }
 
 void update_board(){
