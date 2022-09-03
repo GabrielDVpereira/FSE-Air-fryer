@@ -30,7 +30,7 @@ Primeiro, deve-se apertar o botão de ligar o sistema. A partir daí, uma vez qu
 - TE: Temperatura Externa
 - TIMER: Tempo em segundos
 
-Há também a possibilidade de escolher um modo pré-selecioando de execução. Para isso, basta pressionar o botão "Menu". No terminal, será apresentado modos de cozimento: 
+Há também a possibilidade de escolher um modo pré-selecioando de execução. Para isso, basta pressionar o botão "Menu". No terminal, será apresentado modos de cozimento no terminal do programa: 
 
 1 - Assar frango (Temperatura: 40, Tempo: 3 min)
 2 - Descongelar Carne (Temperatura: 50, Tempo: 5 min)
