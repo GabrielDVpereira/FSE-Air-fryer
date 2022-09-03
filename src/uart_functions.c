@@ -1,14 +1,21 @@
 #include "uart_functions.h"
-#include "config.h"
+#include "uart_config.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>         //Used for UART
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 #include <string.h>
+#include "modbus.h"
+#include "utils.h"
+#include "crc16.h"
 
-int initUart(char * path) {
+
+MODBUS_RESPONSE get_uart_response(unsigned char*); 
+
+int init_uart(char * path) {
     int uart0_filestream = -1;
-
+    
     uart0_filestream = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
 
     if (uart0_filestream == -1)
@@ -22,7 +29,7 @@ int initUart(char * path) {
     return uart0_filestream;
 }
 
-void configUart(int uartStream){
+void config_uart(int uartStream){
     struct termios options;
     tcgetattr(uartStream, &options);
     options.c_cflag = B9600 | CS8 | CLOCAL | CREAD; //<Set baud rate
@@ -33,145 +40,95 @@ void configUart(int uartStream){
     tcsetattr(uartStream, TCSANOW, &options);
 }
 
-void closeUart(int uartStream){
+void close_uart(int uartStream){
     close(uartStream);
 }
 
-void writeUart(int uartStream, unsigned char* info, int size) {
+int write_uart(int uartStream, unsigned char* info, int size) {
    int response = write(uartStream, info, size);
    if(response < 0){
-    printf("Erro ao escrever na UART\n"); 
-    return; 
+    return UART_WRITE_ERROR; 
    } 
+   return UART_WRITE_SUCCESS;
+}
 
-   printf("Mensagem Escrita! \n");
+void send_int_uart(int uartStream, int data, char msgType){
+    unsigned char dataByte[4]; 
+    memcpy(dataByte, &data, 4);
+
+    MODBUS_MESSAGE message = format_send_message(msgType, dataByte, 4);
+    write_uart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 
 }
 
+void send_float_uart(int uartStream, float data, char msgType){
+    unsigned char dataByte[4]; 
+    memcpy(dataByte, &data, 4);
 
-
-
-void printBuffer(unsigned char * buffer) {
-    for(int i=0; i < 9; i++){
-    printf("%x", buffer[i]);
-    }
-    printf("\n");
+    MODBUS_MESSAGE message = format_send_message(msgType, dataByte, 4);
+    write_uart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 }
 
-unsigned char matricula[] = {0, 3, 4, 1}; 
-void sendIntUart(int uartStream, int data){
-    unsigned char buffer[9];
-    buffer[0] = SEND_INT;
-
-    memcpy(&buffer[1], &data, 4);
-    memcpy(&buffer[5], matricula, 4);
-
-    writeUart(uartStream, buffer, 9);
+void send_byte_uart(int uartStream, unsigned char data, char msgType){
+    MODBUS_MESSAGE message = format_send_message(msgType, &data, 1);
+    write_uart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 }
 
 
-void sendFloatUart(int uartStream, float data){
-    unsigned char buffer[20];
-    buffer[0] = SEND_FLOAT;
+MODBUS_RESPONSE read_uart(int uartStream, char msgType){
+    MODBUS_MESSAGE message = format_request_message(msgType);
+    MODBUS_RESPONSE response;
 
-    memcpy(&buffer[1], &data, sizeof(data)); // copying info to send
-    memcpy(&buffer[5], matricula, sizeof(matricula)); // copying matricula
-   
-   printf("Buffer para envio de float criado! \n"); 
-   printBuffer(buffer);
-   writeUart(uartStream, buffer, 9);
-}
+    int writte_response = write_uart(uartStream, message.buffer, message.size);
+    free(message.buffer);
 
-void sendStringUart(int uartStream, char* data){
-    unsigned char buffer[256];
-    int data_size = strlen(data) + 1;
-    buffer[0] = SEND_STRING;
-    buffer[1] = data_size; 
-    memcpy(&buffer[2], data, data_size); // copying data 
-    memcpy(&buffer[2 + data_size], matricula, sizeof(matricula)); // copying matricula 
-    printf("numero da string: %d\n", data_size);
-    printf("Buffer para envio de string criado! \n"); 
-    printBuffer(buffer);
-    writeUart(uartStream, buffer, data_size + 6 ); // 1 of command, 1 of string size and 4 for matricula.
-}
-
-void readInd(int uartStream){
-    unsigned char cmd_buffer[5];
-    cmd_buffer[0] =  REQUEST_INT;
-
-    memcpy(&cmd_buffer[1], matricula, 4); 
-    writeUart(uartStream, cmd_buffer, 5);
-
-    sleep(1);
-
-    unsigned char buffer[20]; 
-    int data; 
-    int length = read(uartStream, (void*)buffer, 4);
-    memcpy(&data, &buffer, 4); // copying code 
-     
-    if(length < 0){
-        printf("Erro na leitura\n"); 
-        return;
+    if(writte_response == UART_WRITE_ERROR) {
+        response.error = UART_WRITE_ERROR; 
+        return response;
     }
 
-    printf("%i Bytes lidos : %d\n", length, data);
+    usleep(250000); 
 
-}
+    unsigned char buffer[9]; 
+  
+    int length = read(uartStream, buffer, 9);
 
-void readFloat(int uartStream){
+    response = get_uart_response(buffer); 
 
-    unsigned char cmd_buffer[5];
-    cmd_buffer[0] =  REQUEST_FLOAT;
+    short crc = calcula_CRC(buffer, 7);
 
-    memcpy(&cmd_buffer[1], matricula, 4); 
-    writeUart(uartStream, cmd_buffer, 5);
-
-    sleep(1);
-
-    float buffer; 
-    int length = read(uartStream, (void*)&buffer, 4);
+    if(crc != response.crc){
+        printf("Erro de CRC\n"); 
+        printf("CRC CALCULADO: %d CRC ENVIADO: %d\n", crc, response.crc); 
+        response.error = CRC_ERROR; 
+        return response; 
+    }
 
     if(length < 0){
-        printf("Erro na leitura\n"); 
-        return;
+        response.error = READ_ERROR; 
+        return response;
     }
+    usleep(250000); 
 
-    printf("%i Bytes lidos : %f\n", length, buffer);
+    return response;
 }
 
-void readString(int uartStream){
 
-    unsigned char cmd_buffer[5];
-    cmd_buffer[0] =  REQUEST_STRING;
-
-    memcpy(&cmd_buffer[1], matricula, 4); 
-    writeUart(uartStream, cmd_buffer, 5);
-    sleep(1);
-    int message_len; 
-    int size = read(uartStream, &message_len, 1);
-
-    if(size < 0){
-        printf("Erro na leitura\n"); 
-        return;
-    }
-
-    printf("Tamanho da String: %d\n", message_len); 
-
-    unsigned char buffer[255];  
-    int message_total_size = read(uartStream, buffer, message_len);
-
-    if(message_total_size < 0){
-        printf("Erro na leitura.\n"); 
-        return;
-    }
-
-    if(message_total_size == 0){
-        printf("Não há dados disponíveis.\n"); 
-        return;
-    }
-
-    buffer[message_total_size] = '\0';
-    printf("%i Bytes lidos : %s\n", message_total_size, buffer);
-
+MODBUS_RESPONSE get_uart_response(unsigned char* buffer){
+    MODBUS_RESPONSE response; 
+    response.error = CRC_SUCCESS;
+    memcpy(&response.crc, &buffer[7], 2);
+    memcpy(&response.device_address, &buffer[0], 1); 
+    memcpy(&response.modbus_code, &buffer[1], 1); 
+    memcpy(&response.subcode, &buffer[2], 1); 
+    memcpy(&response.data, &buffer[3], 4); 
+    return response;
 }
+
+
+
+
 
