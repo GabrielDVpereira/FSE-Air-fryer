@@ -97,7 +97,7 @@ void controll_system_temperature(){
 }
 
 int is_idle_temperature(){
-    int ERROR_MARGIN = 1; 
+    float ERROR_MARGIN = 0.5; 
     return ti >= (tr - ERROR_MARGIN) && ti <= (tr + ERROR_MARGIN); // error margin of 1
 }
 
@@ -172,7 +172,7 @@ void stop_system(){
 
 void reset_controller_state(){
     printf("reset_controller_state\n");
-    show_message_lcd("bye!"); 
+    show_message_lcd("Finalidado!"); 
     is_adjusting_temperature = 1;
     adjust_tempeture(PWM_MIN);
     
