@@ -180,4 +180,6 @@ void reset_controller_state(){
     set_system_stoped(); 
     SYSTEM_CONFIG config = get_current_config(); 
     send_byte_uart(config.uart_stream,  config.system_running,  SEND_SYSTEM_RUNNING);
+    send_int_uart(config.uart_stream, 0, SEND_SYSTEM_TIME);
+    if(is_menu_mode_on()) set_menu_mode_off();
 }
