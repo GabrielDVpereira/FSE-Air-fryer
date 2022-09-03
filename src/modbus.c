@@ -7,7 +7,7 @@
 #include "uart_config.h"
 #include "utils.h"
 
-unsigned char MATRICULA[] = {9, 9, 9, 9}; 
+unsigned char MATRICULA[] = {0, 3, 4, 1}; 
 MODBUS_MESSAGE format_request_message(char subcode){
     int bufferSize = 9; 
     int pos = 0; 

@@ -21,10 +21,9 @@
 
 int fd;  // seen by all subroutines
 
-void show_temperatute_lcd(double ti, double tr, int time){
+void show_temperatute_time(double ti, double tr, int time){
    ClrLcd();
    lcdLoc(LINE1);
-
    typeln("TI:");
    typeFloat(ti);
 
@@ -34,9 +33,54 @@ void show_temperatute_lcd(double ti, double tr, int time){
    lcdLoc(LINE2);
    typeln(" TIME:");
    typeInt(time);
-   typeln(" seg ");
+   typeln(" s ");
 
 }
+
+void show_temperatute_lcd_adjusting(double ti, double tr){
+   ClrLcd();
+   lcdLoc(LINE1);
+   typeln("TI:");
+   typeFloat(ti);
+
+   typeln(" TR:");
+   typeFloat(tr);
+
+   lcdLoc(LINE2);
+   typeln(ti < tr ? "Aquecendo" : "Esfriando");
+}
+
+void show_temperatute_lcd_cooling(double ti, double room_temp){
+   ClrLcd();
+   lcdLoc(LINE1);
+   typeln("TI:");
+   typeFloat(ti);
+
+   typeln(" AMB:");
+   typeFloat(room_temp);
+
+   lcdLoc(LINE2);
+   typeln("Esfriando");
+}
+
+void show_temperatute_lcd_mode(double ti, double tr, int time,  char *mode){
+   ClrLcd();
+   lcdLoc(LINE1);
+   typeln("TI:");
+   typeFloat(ti);
+
+   typeln(" TR:");
+   typeFloat(tr);
+
+   lcdLoc(LINE2);
+   typeln("M: "); 
+   typeln(mode);
+   typeln(" "); 
+
+   typeInt(time);
+   typeln(" s");
+}
+
 
 void show_message_lcd(const char *s){
   ClrLcd();

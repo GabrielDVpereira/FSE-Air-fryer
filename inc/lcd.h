@@ -29,7 +29,10 @@ void ClrLcd(void); // clr LCD return home
 void typeln(const char *s);
 void typeChar(char val);
 
-void show_temperatute_lcd(double, double, int);
+void show_temperatute_time(double, double, int); 
+void show_temperatute_lcd_adjusting(double, double);
+void show_temperatute_lcd_cooling(double, double); 
 void show_message_lcd(const char*);
+void show_temperatute_lcd_mode(double, double, int, char *);
 
 #endif

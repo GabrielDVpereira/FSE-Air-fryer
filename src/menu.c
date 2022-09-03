@@ -17,6 +17,8 @@ void handle_add_time();
 void handle_decrease_time();
 void handle_running();
 void handle_stoped();
+void handle_menu_mode();
+void handle_user_input(int); 
 
 
 void menu(){
@@ -35,8 +37,13 @@ void menu(){
         if(response.subcode != REQUEST_USER_INPUTS) continue; 
         if(response.error != CRC_SUCCESS) continue; 
 
-        switch (user_input)
-        {
+        handle_user_input(user_input);        
+        usleep(50000); 
+    }
+}
+
+void handle_user_input(int option){
+    switch (option){
             case USER_INPUT_TURN_ON_OVEN:
                 handle_turn_on_oven(); 
                 break;
@@ -61,10 +68,11 @@ void menu(){
                 handle_stoped(); 
                 break; 
 
+            case USER_INPUT_MENU_MODE: 
+                handle_menu_mode(); 
+                break; 
             default:
                 break;
-        }
-        usleep(50000); 
     }
 }
 
@@ -142,3 +150,43 @@ void handle_stoped(){
     SYSTEM_CONFIG config = get_current_config(); 
     send_byte_uart(config.uart_stream,  config.system_running,  SEND_SYSTEM_RUNNING);
 }
+
+void handle_menu_mode(){
+    if(!is_system_on()){
+        printf("You must turn on the System\n"); 
+        return;
+    }
+
+    show_message_lcd("Modo Menu"); 
+    DEFINED_MODE chicken = { .time = 3, .tr = 40.0, .name = "Frango" }; 
+    DEFINED_MODE meat = { .time = 5, .tr = 50.0, .name = "Carne"}; 
+    DEFINED_MODE nuggets = { .time = 1, .tr = 30.0, .name = "Nugget"}; 
+
+    DEFINED_MODE options[] = { chicken, meat, nuggets }; 
+    int option; 
+    printf("Digite uma opção:\n");  
+    printf("1 - Assar frango\n");  
+    printf("2 - Descongelar Carne\n");  
+    printf("3 - Fritar Nuggets\n");  
+    printf("4 - Sair\n");  
+    scanf("%d", &option); 
+
+    if(option == 4) return; 
+
+    while(option < 1 || option > 4){
+        printf("Digite uma opção válida:  \n");
+        scanf("%d", &option); 
+    }
+    DEFINED_MODE selected_option = options[option - 1]; 
+    set_menu_mode_on();
+    set_new_time(selected_option.time); 
+    SYSTEM_CONFIG config = get_current_config(); 
+    send_float_uart(config.uart_stream, selected_option.tr, SEND_REFERENCE_SIGN);
+    send_int_uart(config.uart_stream, selected_option.time, SEND_SYSTEM_TIME);
+    set_mode(selected_option); 
+    show_message_lcd("Iniciando..."); 
+    sleep(1);
+    handle_running();
+
+}
+

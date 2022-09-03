@@ -3,9 +3,30 @@
 
 
 SYSTEM_CONFIG config; 
+DEFINED_MODE mode; 
 
 SYSTEM_CONFIG get_current_config(){
     return config;
+}
+
+DEFINED_MODE get_mode(){
+    return mode; 
+}
+
+void  set_mode(DEFINED_MODE new_mode){
+    mode = new_mode; 
+}
+
+int is_menu_mode_on(){
+    return  config.menu_mode == MENU_MODE_ON; 
+}
+
+void set_menu_mode_on(){
+    config.menu_mode = MENU_MODE_ON; 
+}
+
+void set_menu_mode_off(){
+    config.menu_mode = MENU_MODE_OFF; 
 }
 
 int is_system_on(){
@@ -30,6 +51,10 @@ void init_system_state(int uart_stream){
 
 int should_kill_sytem(){
     return config.kill_all == KILL_SYSTEM; 
+}
+
+void set_new_time(int time){
+    config.time = time; 
 }
 
 void add_system_time(){
