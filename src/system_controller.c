@@ -172,7 +172,7 @@ void stop_system(){
 
 void reset_controller_state(){
     printf("reset_controller_state\n");
-    show_message_lcd("bye!"); 
+    show_message_lcd("Finalidado!"); 
     is_adjusting_temperature = 1;
     adjust_tempeture(PWM_MIN);
     
