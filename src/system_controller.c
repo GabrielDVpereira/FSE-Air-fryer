@@ -37,7 +37,7 @@ double pwm;
 float room_temp; 
 
 void control_temperature(){ 
-    printf("Running system temperature\n",);
+    printf("Running system temperature\n");
     while (is_system_running()){  
         update_temp(); 
         if(should_kill_sytem()){
