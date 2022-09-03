@@ -4,7 +4,7 @@
 FILE *fpt;
 void init_csv_log(){
     fpt = fopen("log.csv", "w+");
-    fprintf(fpt,"Data, Temp. Interna, Temp. Ambiente, Temp. Referencia, Atuador\n");
+    fprintf(fpt,"Hora, Temp. Interna, Temp. Ambiente, Temp. Referencia, Atuador\n");
 }
 
 void writte_csv_log(float ti, float room_temp, float tr, int pwm){
