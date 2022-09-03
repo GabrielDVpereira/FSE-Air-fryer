@@ -37,7 +37,7 @@ double pwm;
 float room_temp; 
 
 void control_temperature(){ 
-    printf(" INITIALIZE TEMPERATURE CONTROL %d\n", is_system_running());
+    printf("Running system temperature\n",);
     while (is_system_running()){  
         update_temp(); 
         if(should_kill_sytem()){
@@ -73,8 +73,6 @@ void control_timer(){
 
 
 void controll_system_temperature(){
-    printf("controll_system_temperature\n"); 
-    printf("\n\n"); 
 
     pid_atualiza_referencia(tr);
     pwm = pid_controle(ti); 
@@ -91,7 +89,6 @@ void controll_system_temperature(){
     send_float_uart(config.uart_stream, tr, SEND_REFERENCE_SIGN);
 
     if(is_idle_temperature()){ 
-        printf("is_idle_temperature\n"); 
         is_adjusting_temperature = 0;
     }
 }
@@ -119,7 +116,6 @@ void update_tr(){
     SYSTEM_CONFIG config = get_current_config();
     MODBUS_RESPONSE response_tf = read_uart(config.uart_stream, REQUEST_REFERENCE_TEMPERATURE);
     while(response_tf.error != CRC_SUCCESS || response_tf.subcode != REQUEST_REFERENCE_TEMPERATURE){
-        printf("Error TR %d %x\n",response_tf.error, response_tf.subcode );
         response_tf = read_uart(config.uart_stream, REQUEST_REFERENCE_TEMPERATURE);
     }
 
@@ -131,7 +127,6 @@ void update_ti(){
     SYSTEM_CONFIG config = get_current_config();
     MODBUS_RESPONSE response_ti = read_uart(config.uart_stream, REQUEST_INTERNAL_TEMPERATURE);
     while(response_ti.error != CRC_SUCCESS || response_ti.subcode != REQUEST_INTERNAL_TEMPERATURE){
-        printf("Error TI\n");
         response_ti = read_uart(config.uart_stream, REQUEST_REFERENCE_TEMPERATURE);
     }
   
@@ -141,6 +136,7 @@ void update_ti(){
 
 void update_room_temp(){
   room_temp = read_room_temperature();
+  printf("ROOM TEMP %f\n", room_temp); 
 }
 
 void start_system_timer(){
@@ -158,8 +154,6 @@ void stop_system(){
     }
 
     memcpy(&ti, response_ti.data, 4);
-
-    printf(" TI %f  ---- ROOM TEMP %f\n", ti, room_temp); 
 
     if(ti > room_temp){
         show_temperatute_lcd_cooling(ti, room_temp); 
