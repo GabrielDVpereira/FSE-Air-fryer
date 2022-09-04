@@ -4,6 +4,23 @@
 
 SYSTEM_CONFIG config; 
 DEFINED_MODE mode; 
+SYSTEM_TEMP system_temp; 
+
+SYSTEM_TEMP get_current_temp(){
+    return system_temp; 
+}
+
+void set_new_ti(float ti){
+    system_temp.ti = ti; 
+}
+
+void set_new_tr(float tr ){
+    system_temp.tr = tr; 
+}
+
+void set_new_room_temp(float room_temp){
+    system_temp.room_temp = room_temp; 
+}
 
 SYSTEM_CONFIG get_current_config(){
     return config;

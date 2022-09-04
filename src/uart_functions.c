@@ -90,7 +90,7 @@ MODBUS_RESPONSE read_uart(int uartStream, char msgType){
         return response;
     }
 
-    usleep(250000); 
+    usleep(150000); 
 
     unsigned char buffer[9]; 
   
@@ -111,7 +111,7 @@ MODBUS_RESPONSE read_uart(int uartStream, char msgType){
         response.error = READ_ERROR; 
         return response;
     }
-    usleep(250000); 
+    usleep(150000); 
 
     return response;
 }

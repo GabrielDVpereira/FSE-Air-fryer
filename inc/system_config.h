@@ -34,6 +34,14 @@ typedef struct
 
 } SYSTEM_CONFIG;
 
+typedef struct 
+{
+    float ti; 
+    float tr; 
+    float room_temp; 
+
+} SYSTEM_TEMP;
+
 
 void init_system_state(int);
 SYSTEM_CONFIG get_current_config();
@@ -54,5 +62,9 @@ int is_menu_mode_on();
 void set_menu_mode_on(); 
 void set_menu_mode_off(); 
 DEFINED_MODE get_mode();
+SYSTEM_TEMP get_current_temp(); 
+void set_new_ti(float);
+void set_new_tr(float);
+void set_new_room_temp(float);
 
 #endif

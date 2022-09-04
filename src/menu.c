@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include "system_controller.h"
 #include "modbus.h"
+#include "sensor.h"
 
 void handle_turn_on_oven();
 void handle_turn_off_oven();
@@ -18,31 +19,91 @@ void handle_decrease_time();
 void handle_running();
 void handle_stoped();
 void handle_menu_mode();
-void handle_user_input(int); 
+void update_tr(); 
+void update_ti(); 
+void update_room_temp();
+void update_user_input();
+void handle_modbus_response(MODBUS_RESPONSE);
+void handle_ti(MODBUS_RESPONSE); 
+void handle_tr(MODBUS_RESPONSE); 
+void handle_user_input(MODBUS_RESPONSE); 
 
-
-void menu(){
-    SYSTEM_CONFIG config = get_current_config();    
-
+void menu(){  
     while (1)
     {   
         if(should_kill_sytem()) return; 
-        if(is_system_running()) continue;
-        
-        MODBUS_RESPONSE response = read_uart(config.uart_stream, REQUEST_USER_INPUTS); 
-        
-        int user_input; 
-        memcpy(&user_input, response.data, 4);
-
-        if(response.subcode != REQUEST_USER_INPUTS) continue; 
-        if(response.error != CRC_SUCCESS) continue; 
-
-        handle_user_input(user_input);        
-        usleep(50000); 
+        update_user_input(); 
+        update_tr(); 
+        update_ti();
+        update_room_temp();
     }
 }
 
-void handle_user_input(int option){
+void update_user_input(){
+    SYSTEM_CONFIG config = get_current_config();  
+    MODBUS_RESPONSE response = read_uart(config.uart_stream, REQUEST_USER_INPUTS);    
+    if(response.error != CRC_SUCCESS) return; 
+    handle_modbus_response(response);
+}
+
+void update_tr(){
+    if(is_menu_mode_on()){
+        DEFINED_MODE mode = get_mode();
+        set_new_tr(mode.tr); 
+        return; 
+    }
+
+    SYSTEM_CONFIG config = get_current_config();
+    MODBUS_RESPONSE response_tr = read_uart(config.uart_stream, REQUEST_REFERENCE_TEMPERATURE);
+    if(response_tr.error != CRC_SUCCESS) return; 
+    handle_modbus_response(response_tr);
+}
+
+void update_ti(){
+    SYSTEM_CONFIG config = get_current_config();
+    MODBUS_RESPONSE response_ti = read_uart(config.uart_stream, REQUEST_INTERNAL_TEMPERATURE);
+    if(response_ti.error != CRC_SUCCESS) return; 
+    handle_modbus_response(response_ti);  
+}
+
+void update_room_temp(){
+  float room_temp = read_room_temperature();
+  set_new_room_temp(room_temp); 
+}
+
+void handle_modbus_response(MODBUS_RESPONSE response){
+    switch (response.subcode)
+    {
+    case REQUEST_USER_INPUTS:
+        handle_user_input(response); 
+        break;
+    case REQUEST_INTERNAL_TEMPERATURE: 
+        handle_ti(response); 
+        break;
+    case REQUEST_REFERENCE_TEMPERATURE:
+        handle_tr(response); 
+        break;
+    default:
+        break;
+    }
+}
+
+void handle_ti(MODBUS_RESPONSE response){
+    float ti; 
+    memcpy(&ti, response.data, 4);
+    set_new_ti(ti); 
+}
+
+void handle_tr(MODBUS_RESPONSE response){
+    float tr; 
+    memcpy(&tr, response.data, 4);
+    set_new_tr(tr); 
+}
+
+void handle_user_input(MODBUS_RESPONSE response){
+    int option; 
+    memcpy(&option, response.data, 4);
+
     switch (option){
             case USER_INPUT_TURN_ON_OVEN:
                 handle_turn_on_oven(); 
@@ -99,6 +160,12 @@ void handle_add_time(){
         return;
     }
 
+
+    if(is_system_running()){
+        printf("Cannot change time while running. Press stop the system first\n"); 
+        return;
+    }
+
     printf("handle_add_time\n"); 
     add_system_time(); 
     SYSTEM_CONFIG config = get_current_config(); 
@@ -112,6 +179,12 @@ void handle_decrease_time(){
         printf("You must turn on the System\n"); 
         return;
     }
+
+    if(is_system_running()){
+        printf("Cannot change time while running. Press stop the system first\n"); 
+        return;
+    }
+
     printf("handle_decrease_time\n"); 
     decrease_system_time(); 
     SYSTEM_CONFIG config = get_current_config(); 
@@ -121,7 +194,6 @@ void handle_decrease_time(){
 
 
 void handle_running(){
-    printf("handle_running\n"); 
     if(!is_system_on()){
         printf("You must turn on the System\n"); 
         return;
@@ -133,9 +205,11 @@ void handle_running(){
     }
 
     if(is_time_over()){
-        printf("Você precisa adicionar um tempo para inciar\n"); 
+        printf("You need to add time to start.\n"); 
         return;
     }
+
+    printf("handle_running\n"); 
 
     set_system_running(); 
     SYSTEM_CONFIG config = get_current_config(); 
@@ -152,6 +226,7 @@ void handle_stoped(){
         return;
     }
     set_system_stoped(); 
+    show_message_lcd("Sistema Parado");
     SYSTEM_CONFIG config = get_current_config(); 
     send_byte_uart(config.uart_stream,  config.system_running,  SEND_SYSTEM_RUNNING);
 }
@@ -159,6 +234,11 @@ void handle_stoped(){
 void handle_menu_mode(){
     if(!is_system_on()){
         printf("You must turn on the System\n"); 
+        return;
+    }
+
+    if(is_system_running()){
+        printf("Cannot access menu while running. Press stop the system first\n"); 
         return;
     }
 
