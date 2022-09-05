@@ -37,6 +37,8 @@ void control_temperature(){
         if(!is_time_over()) controll_system_temperature();
         if(!is_adjusting_temperature && !started_timer) start_system_timer(); 
         if(is_time_over()) stop_system(); 
+        SYSTEM_TEMP temp = get_current_temp(); 
+        writte_csv_log(temp.ti,temp.room_temp,temp.tr,(int)pwm);
         sleep(1);
     }
 
@@ -59,7 +61,6 @@ void control_timer(){
         if(timer % 60  == 0){
             decrease_system_time(); 
         }
-        writte_csv_log(temp.ti,temp.room_temp,temp.tr,(int)pwm);
         sleep(1); 
     }
     started_timer = 0; 
